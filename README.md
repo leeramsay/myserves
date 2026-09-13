@@ -37,7 +37,7 @@ OS X 10.12.
 Requires the Swift toolchain (Xcode or the Command Line Tools: `xcode-select --install`).
 
 ```sh
-git clone https://github.com/YOURNAME/myserves.git
+git clone https://github.com/leeramsay/myserves.git
 cd myserves
 swift build -c release
 cp .build/release/myserves /usr/local/bin/
