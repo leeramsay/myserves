@@ -26,7 +26,7 @@ OS X 10.12.
 
 ## Requirements
 
-- macOS 13 (Ventura) or later — tested on macOS 26 (Tahoe)
+- macOS 13 (Ventura) or later — tested on macOS 26 (Tahoe) and macOS 27
 - Apple Silicon or Intel
 - No Full Disk Access, no `sudo`
 
@@ -106,28 +106,31 @@ Removes every favourite matching the given name or URL.
 
 ## How it works
 
-The favourites live in an `NSKeyedArchiver` blob at:
+**`myserves` never reads or writes the favourites file directly**, so its on-disk
+format is irrelevant to the tool. It calls the `LSSharedFileList` API, which talks
+to the **`sharedfilelistd`** daemon over XPC. The daemon owns the file and handles
+whatever format the running macOS uses — `.sfl2` (Monterey and earlier), `.sfl3`
+(Ventura–Sequoia), or `.sfl4` (Tahoe onwards) — transparently. `myserves` just
+asks the daemon to list, add, or remove entries; there is no format-specific code
+to support or break.
+
+That indirection is also why **no Full Disk Access is required**. The file lives
+in a TCC-protected directory:
 
 ```
 ~/Library/Application Support/com.apple.sharedfilelist/
-    com.apple.LSSharedFileList.FavoriteServers.sfl3
+    com.apple.LSSharedFileList.FavoriteServers.sfl*
 ```
 
-(`.sfl2` before Ventura, `.sfl4` on macOS 26+.) That directory is TCC-protected —
-a normal process reading it directly gets `Operation not permitted` unless it has
-Full Disk Access.
-
-`myserves` never touches the file. The authoritative copy of the list is held by
-the **`sharedfilelistd`** daemon, and the `LSSharedFileList` C functions are thin
-clients that talk to it over XPC. Because the daemon already holds the necessary
-entitlement, every read and write goes through it — **no Full Disk Access
-required**, and Finder's ⌘K dialog reflects changes immediately.
+A normal process reading it directly gets `Operation not permitted`. But
+`myserves` goes through `sharedfilelistd`, which already holds the entitlement, so
+reads and writes just work — and Finder's ⌘K dialog reflects them immediately.
 
 `LSSharedFileList` was removed from Apple's *public headers* years ago, but the
 implementation — including a first-class `kLSSharedFileListFavoriteServers`
-symbol — is still present and functional in CoreServices (confirmed on
-macOS 26). `myserves` loads the symbols at runtime with `dlopen`/`dlsym` and uses
-`LSSharedFileListCreate` with the `FavoriteServers` list identifier.
+symbol — is still present and functional in CoreServices. `myserves` loads the
+symbols at runtime with `dlopen`/`dlsym` and calls `LSSharedFileListCreate` with
+the `FavoriteServers` list identifier.
 
 ## Acknowledgements
 
