@@ -1,6 +1,6 @@
 import Foundation
 
-let versionString = "1.0.0"
+let versionString = "0.1.0"
 
 let usage = """
 myserves \(versionString) — manage the macOS "Connect to Server" (⌘K) favourites
