@@ -1,0 +1,62 @@
+name: Release
+
+# Builds a universal (Apple Silicon + Intel) binary and publishes it to a
+# GitHub Release whenever a version tag is pushed, e.g.:
+#   git tag v1.0.0 && git push origin v1.0.0
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write   # required for gh release create
+
+jobs:
+  release:
+    runs-on: macos-latest   # GitHub's macOS runners ship full Xcode (needed for --arch)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version from tag
+        id: v
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Stamp version into source
+        run: |
+          sed -i '' "s/^let versionString = \".*\"/let versionString = \"${{ steps.v.outputs.version }}\"/" Sources/myserves/main.swift
+          grep 'let versionString' Sources/myserves/main.swift
+
+      - name: Build universal binary
+        run: swift build -c release --arch arm64 --arch x86_64
+
+      - name: Locate, verify, and package
+        id: pkg
+        run: |
+          set -euo pipefail
+          BIN="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)/myserves"
+          file "$BIN"
+          lipo -info "$BIN"
+          # Sanity gate: reported version must match the tag
+          GOT="$("$BIN" version)"
+          if [ "$GOT" != "${{ steps.v.outputs.version }}" ]; then
+            echo "::error::binary reports $GOT but tag is ${{ steps.v.outputs.version }}"; exit 1
+          fi
+          mkdir -p dist
+          TARBALL="myserves-${{ steps.v.outputs.version }}-macos-universal.tar.gz"
+          tar -czf "dist/$TARBALL" \
+            -C "$(dirname "$BIN")" myserves \
+            -C "$GITHUB_WORKSPACE" LICENSE README.md THIRD-PARTY-NOTICES.md
+          ( cd dist && shasum -a 256 "$TARBALL" > "$TARBALL.sha256" )
+          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+          ls -la dist
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "dist/${{ steps.pkg.outputs.tarball }}" \
+            "dist/${{ steps.pkg.outputs.tarball }}.sha256" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes
