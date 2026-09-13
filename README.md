@@ -136,9 +136,10 @@ the `FavoriteServers` list identifier.
 
 The runtime `dlopen`/`dlsym` approach and the `kLSSharedFileListItemLast`
 sentinel handling are adapted from [7onnie/mysides](https://github.com/7onnie/mysides)
-(MIT), itself a rewrite of the original [mosen/mysides](https://github.com/mosen/mysides)
-(MIT) by Eamon Brosnan. Those tools manage the Finder *sidebar*; `myserves`
-applies the same technique to the *Connect to Server* favourites.
+(MIT), itself a rewrite of [mosen/mysides](https://github.com/mosen/mysides)
+(MIT). Those tools manage the Finder *sidebar*; `myserves` applies the same
+technique to the *Connect to Server* favourites. Full upstream copyright notices
+are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 ## License
 

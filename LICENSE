@@ -19,16 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-This project reuses, under the MIT License, the runtime dlopen/dlsym approach to
-the private LSSharedFileList API from:
-
-  - mysides — https://github.com/7onnie/mysides    (Copyright (c) Jonas Haderer)
-  - mysides — https://github.com/mosen/mysides      (Copyright (c) 2016 Eamon Brosnan)
-
-Both are MIT-licensed. myserves targets a different shared file list
-(FavoriteServers, the ⌘K "Connect to Server" favourites) rather than the Finder
-sidebar, but the symbol set and the kLSSharedFileListItemLast sentinel handling
-are adapted from that work.
